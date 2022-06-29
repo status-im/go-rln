@@ -64,8 +64,7 @@ func (r *RLN) GenerateKey() (*KeyPair, error) {
 	return key, nil
 }
 
-// Hash hashes a given input using the underlying function.
-func (r *RLN) Hash(input []byte) ([]byte, error) {
+func (r *RLN) SignalToField(input []byte) ([]byte, error) {
 
 	buf := toBuffer(input)
 	size := int(unsafe.Sizeof(buf))
@@ -75,7 +74,7 @@ func (r *RLN) Hash(input []byte) ([]byte, error) {
 	var output []byte
 	out := toBuffer(output)
 
-	if !bool(C.hash(r.ptr, in, 1, &out)) {
+	if !bool(C.signal_to_field(r.ptr, in, &out)) {
 		return nil, errors.New("failed to hash")
 	}
 
@@ -89,13 +88,7 @@ func (r *RLN) GenerateProof(input []byte, key *KeyPair, index uint) ([]byte, err
 	var output []byte
 	out := toBuffer(output)
 
-	keybuf := toBuffer(key.Key[:])
-	auth := &C.Auth{
-		secret_buffer: &keybuf,
-		index:         C.ulong(index),
-	}
-
-	if !bool(C.generate_proof(r.ptr, &inputBuf, auth, &out)) {
+	if !bool(C.generate_proof(r.ptr, &inputBuf, &out)) {
 		return nil, errors.New("failed to generate proof")
 	}
 

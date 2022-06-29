@@ -46,6 +46,7 @@ func TestGenerateKey(t *testing.T) {
 	}
 }
 
+/*
 func TestRLN_Hash(t *testing.T) {
 	// This test is based on tests from:
 	// https://github.com/status-im/nim-waku/blob/b7998de09d1ef04599a699938da69aecfa63cc6f/tests/v2/test_waku_rln_relay.nim#L527
@@ -71,7 +72,7 @@ func TestRLN_Hash(t *testing.T) {
 	if expected != hex.EncodeToString(output) {
 		t.Fatalf("value %x did not match expected %s", output, expected)
 	}
-}
+}*/
 
 func TestRLN_GetRoot(t *testing.T) {
 	// This test is based on tests from:
