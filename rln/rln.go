@@ -142,11 +142,14 @@ func (r *RLN) Hash(data []byte) (MerkleNode, error) {
 func (r *RLN) GenerateProof(data []byte, key MembershipKeyPair, index MembershipIndex, epoch Epoch) (*RateLimitProof, error) {
 	input := serialize(key.IDKey, index, epoch, data)
 	inputBuf := toBuffer(input)
+	size := int(unsafe.Sizeof(inputBuf))
+	in := (*C.Buffer)(C.malloc(C.size_t(size)))
+	*in = inputBuf
 
 	var output []byte
 	out := toBuffer(output)
 
-	if !bool(C.generate_proof(r.ptr, &inputBuf, &out)) {
+	if !bool(C.generate_proof(r.ptr, in, &out)) {
 		return nil, errors.New("could not generate the proof")
 	}
 
@@ -192,10 +195,13 @@ func (r *RLN) GenerateProof(data []byte, key MembershipKeyPair, index Membership
 func (r *RLN) Verify(data []byte, proof RateLimitProof) bool {
 	proofBytes := proof.serialize(data)
 	proofBuf := toBuffer(proofBytes)
+	size := int(unsafe.Sizeof(proofBuf))
+	in := (*C.Buffer)(C.malloc(C.size_t(size)))
+	*in = proofBuf
 
 	result := uint32(0)
 	res := C.uint(result)
-	if !bool(C.verify(r.ptr, &proofBuf, &res)) {
+	if !bool(C.verify(r.ptr, in, &res)) {
 		return false
 	}
 
@@ -205,7 +211,13 @@ func (r *RLN) Verify(data []byte, proof RateLimitProof) bool {
 // InsertMember adds the member to the tree
 func (r *RLN) InsertMember(idComm IDCommitment) bool {
 	buf := toBuffer(idComm[:])
-	return bool(C.update_next_member(r.ptr, &buf))
+
+	size := int(unsafe.Sizeof(buf))
+	in := (*C.Buffer)(C.malloc(C.size_t(size)))
+	*in = buf
+
+	res := C.update_next_member(r.ptr, in)
+	return bool(res)
 }
 
 // index is the position of the id commitment key to be deleted from the tree

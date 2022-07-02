@@ -16,6 +16,7 @@ func serialize(idKey IDKey, memIndex MembershipIndex, epoch Epoch, msg []byte) [
 	output := append(idKey[:], memIndexBytes...)
 	output = append(output, epoch[:]...)
 	output = append(output, lenPrefMsg...)
+
 	return output
 }
 

@@ -32,28 +32,22 @@ type WakuRLNRelay struct {
 	NullifierLog map[Epoch][]ProofMetadata
 }
 
-func CalcMerkleRoot(list []IDCommitment) (string, error) {
+func CalcMerkleRoot(list []IDCommitment) (MerkleNode, error) {
 	// returns the root of the Merkle tree that is computed from the supplied list
-	// the root is in hexadecimal format
 
 	rln, err := NewRLN()
 	if err != nil {
-		return "", err
+		return MerkleNode{}, err
 	}
 
 	// create a Merkle tree
 	for _, c := range list {
 		if !rln.InsertMember(c) {
-			return "", errors.New("could not add member")
+			return MerkleNode{}, errors.New("could not add member")
 		}
 	}
 
-	root, err := rln.GetMerkleRoot()
-	if err != nil {
-		return "", err
-	}
-
-	return hex.EncodeToString(root[:]), nil
+	return rln.GetMerkleRoot()
 }
 
 func createMembershipList(n int) ([][]string, string, error) {
