@@ -17,15 +17,6 @@ type WakuRLNRelaySuite struct {
 	suite.Suite
 }
 
-// SetupTest is used here for reinitializing the mock before every
-// test function to avoid faulty execution.
-func (s *WakuRLNRelaySuite) SetupTest() {
-}
-
-func (s *WakuRLNRelaySuite) TearDownTest() {
-	//
-}
-
 func (s *WakuRLNRelaySuite) TestMembershipKeyGen() {
 	rln, err := NewRLNWithDepth(32)
 	s.NoError(err)
@@ -127,7 +118,7 @@ func (s *WakuRLNRelaySuite) TestHash() {
 
 func (s *WakuRLNRelaySuite) TestCreateListMembershipKeysAndCreateMerkleTreeFromList() {
 	groupSize := 100
-	list, root, err := createMembershipList(groupSize)
+	list, root, err := CreateMembershipList(groupSize)
 	s.NoError(err)
 	s.Len(list, groupSize)
 	s.Len(root, HASH_HEX_SIZE) // check the size of the calculated tree root

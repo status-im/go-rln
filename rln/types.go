@@ -107,8 +107,8 @@ const ETH_CLIENT = "ws://localhost:8540/"
 // HASH_BIT_SIZE is the size of poseidon hash output in bits
 const HASH_BIT_SIZE = 256
 
-// HASH_HEX_SIZE is the size of poseidon hash output as the number hex digits
-const HASH_HEX_SIZE = int(HASH_BIT_SIZE / 4)
+// HASH_HEX_SIZE is the size of poseidon hash output as the number of bytes
+const HASH_HEX_SIZE = int(HASH_BIT_SIZE / 8)
 
 // temporary variables to test waku-rln-relay performance in the static group mode
 
@@ -232,11 +232,11 @@ const STATIC_GROUP_MERKLE_ROOT = "a1877a553eff12e1b21632a0545a916a5c5b8060ad7cc6
 
 // the rln-relay epoch length in seconds
 // TODO: change data type
-const EPOCH_UNIT_SECONDS = float64(10)
+const EPOCH_UNIT_SECONDS = time.Second * 10
 
 // the maximum clock difference between peers in seconds
 // TODO: change data type
-const MAX_CLOCK_GAP_SECONDS = 20.0
+const MAX_CLOCK_GAP_SECONDS = 20 * time.Second
 
 // maximum allowed gap between the epochs of messages' RateLimitProofs
 const MAX_EPOCH_GAP = int64(MAX_CLOCK_GAP_SECONDS / EPOCH_UNIT_SECONDS)
@@ -261,8 +261,7 @@ func (e Epoch) Uint64() uint64 {
 
 // CalcEpoch gets time `t` as `float64` with subseconds resolution in the fractional part
 //  and returns its corresponding rln `Epoch` value
-// TODO: change data type
-func CalcEpoch(t float64) Epoch {
+func CalcEpoch(t time.Duration) Epoch {
 	e := uint64(t / EPOCH_UNIT_SECONDS)
 	return ToEpoch(e)
 }

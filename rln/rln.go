@@ -220,8 +220,9 @@ func (r *RLN) InsertMember(idComm IDCommitment) bool {
 	return bool(res)
 }
 
-// index is the position of the id commitment key to be deleted from the tree
-// the deleted id commitment key is replaced with a zero leaf
+// DeleteMember removes an IDCommitment key from the tree. The index
+// parameter is the position of the id commitment key to be deleted from the tree.
+// The deleted id commitment key is replaced with a zero leaf
 func (r *RLN) DeleteMember(index MembershipIndex) bool {
 	deletionSuccess := bool(C.delete_member(r.ptr, C.ulong(index)))
 	return deletionSuccess
@@ -265,4 +266,55 @@ func ToRLNSignal(wakuMessage *pb.WakuMessage) []byte {
 
 	contentTopicBytes := []byte(wakuMessage.ContentTopic)
 	return append(wakuMessage.Payload, contentTopicBytes...)
+}
+
+// CalcMerkleRoot returns the root of the Merkle tree that is computed from the supplied list
+func CalcMerkleRoot(list []IDCommitment) (MerkleNode, error) {
+	rln, err := NewRLN()
+	if err != nil {
+		return MerkleNode{}, err
+	}
+
+	// create a Merkle tree
+	for _, c := range list {
+		if !rln.InsertMember(c) {
+			return MerkleNode{}, errors.New("could not add member")
+		}
+	}
+
+	return rln.GetMerkleRoot()
+}
+
+// CreateMembershipList produces a list of membership key pairs and also returns the root of a Merkle tree constructed
+// out of the identity commitment keys of the generated list. The output of this function is used to initialize a static
+// group keys (to test waku-rln-relay in the off-chain mode)
+func CreateMembershipList(n int) ([]MembershipKeyPair, MerkleNode, error) {
+	// initialize a Merkle tree
+	rln, err := NewRLN()
+	if err != nil {
+		return nil, MerkleNode{}, err
+	}
+
+	var output []MembershipKeyPair
+	for i := 0; i < n; i++ {
+		// generate a keypair
+		keypair, err := rln.MembershipKeyGen()
+		if err != nil {
+			return nil, MerkleNode{}, err
+		}
+
+		output = append(output, *keypair)
+
+		// insert the key to the Merkle tree
+		if !rln.InsertMember(keypair.IDCommitment) {
+			return nil, MerkleNode{}, errors.New("could not insert member")
+		}
+	}
+
+	root, err := rln.GetMerkleRoot()
+	if err != nil {
+		return nil, MerkleNode{}, err
+	}
+
+	return output, root, nil
 }
