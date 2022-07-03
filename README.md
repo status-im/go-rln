@@ -12,12 +12,34 @@ The goal of this is to create a rate-limiter for blockchains where block product
 after talking to the team at [Celestia](https://celestia.org/).
 
 
-###
-The following architectures require newer versions of glibc. 
+### Building this library
 
-- `x86_64-pc-windows-gnu`
-- `aarch64-unknown-linux-gnu`
-- `x86_64-unknown-linux-gnu`
-- `arm-unknown-linux-gnueabi`
+#### Using [cross](https://github.com/cross-rs)
 
-This [PR](https://github.com/cross-rs/cross/pull/591) will update ubuntu base version on cross. But while it's merged, follow the instructions from [here](https://github.com/cross-rs/cross/wiki/FAQ#newer-linux-versions) to locally build docker images for those architectures.
+```
+make rlnlibs-cross
+```
+
+Some architectures are not available in cross unless they're locally build. This [PR](https://github.com/cross-rs/cross/pull/591) will update ubuntu base version on cross. But while it's merged, build them locally. To build them locally execute the following instructions (adapted from [here](https://github.com/cross-rs/cross/wiki/FAQ#newer-linux-versions)):
+
+```
+git clone --single-branch --depth 1 --branch increment_versions https://github.com/Alexhuszagh/cross
+cd cross
+cargo build-docker-image x86_64-pc-windows-gnu
+cargo build-docker-image aarch64-unknown-linux-gnu
+cargo build-docker-image x86_64-unknown-linux-gnu
+cargo build-docker-image arm-unknown-linux-gnueabi
+cargo build-docker-image i686-pc-windows-gnu
+cargo build-docker-image i686-unknown-linux-gnu
+cargo build-docker-image arm-unknown-linux-gnueabihf
+cargo build-docker-image mips-unknown-linux-gnu
+cargo build-docker-image mips64-unknown-linux-gnuabi64
+cargo build-docker-image mips64el-unknown-linux-gnuabi64
+cargo build-docker-image mipsel-unknown-linux-gnu
+```
+
+#### Using [rustup](https://rust-lang.github.io/rustup/cross-compilation.html)
+
+```
+make rlnlibs-cross
+```
