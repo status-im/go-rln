@@ -1,113 +1,255 @@
-package rln_test
+package rln
 
 import (
+	"bytes"
 	"encoding/hex"
-	"io/ioutil"
-	"reflect"
+	"math"
 	"testing"
 
-	"github.com/decanus/go-rln/rln"
+	"github.com/stretchr/testify/suite"
 )
 
-func TestNew(t *testing.T) {
-	params, err := ioutil.ReadFile("./testdata/parameters.key")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_, err = rln.New(32, params)
-	if err != nil {
-		t.Fatal(err)
-	}
+func TestWakuRLNRelaySuite(t *testing.T) {
+	suite.Run(t, new(WakuRLNRelaySuite))
 }
 
-func TestGenerateKey(t *testing.T) {
-	params, err := ioutil.ReadFile("./testdata/parameters.key")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	r, err := rln.New(32, params)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	k, err := r.GenerateKey()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if reflect.DeepEqual(k.Key, [32]byte{}) {
-		t.Fatal("k.Key was empty")
-	}
-
-	if reflect.DeepEqual(k.Commitment, [32]byte{}) {
-		t.Fatal("k.Commitment was empty")
-	}
+type WakuRLNRelaySuite struct {
+	suite.Suite
 }
 
-func TestRLN_Hash(t *testing.T) {
-	// This test is based on tests from:
-	// https://github.com/status-im/nim-waku/blob/b7998de09d1ef04599a699938da69aecfa63cc6f/tests/v2/test_waku_rln_relay.nim#L527
+func (s *WakuRLNRelaySuite) TestMembershipKeyGen() {
+	rln, err := NewRLNWithDepth(32)
+	s.NoError(err)
 
-	params, err := ioutil.ReadFile("./testdata/parameters.key")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	r, err := rln.New(32, params)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	input := byteArray(32, 1)
-
-	output, err := r.Hash(input)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	expected := "53a6338cdbf02f0563cec1898e354d0d272c8f98b606c538945c6f41ef101828"
-	if expected != hex.EncodeToString(output) {
-		t.Fatalf("value %x did not match expected %s", output, expected)
-	}
+	key, err := rln.MembershipKeyGen()
+	s.NoError(err)
+	s.Len(key.IDKey, 32)
+	s.Len(key.IDCommitment, 32)
+	s.NotEmpty(key.IDKey)
+	s.NotEmpty(key.IDCommitment)
+	s.False(bytes.Equal(key.IDCommitment[:], make([]byte, 32)))
+	s.False(bytes.Equal(key.IDKey[:], make([]byte, 32)))
 }
 
-func TestRLN_GetRoot(t *testing.T) {
-	// This test is based on tests from:
-	// https://github.com/status-im/nim-waku/blob/b7998de09d1ef04599a699938da69aecfa63cc6f/tests/v2/test_waku_rln_relay.nim#L320
+func (s *WakuRLNRelaySuite) TestGetMerkleRoot() {
+	rln, err := NewRLNWithDepth(32)
+	s.NoError(err)
 
-	params, err := ioutil.ReadFile("./testdata/parameters.key")
-	if err != nil {
-		t.Fatal(err)
-	}
+	root1, err := rln.GetMerkleRoot()
+	s.NoError(err)
+	s.Len(root1, 32)
 
-	r, err := rln.New(32, params)
-	if err != nil {
-		t.Fatal(err)
-	}
+	root2, err := rln.GetMerkleRoot()
+	s.NoError(err)
+	s.Len(root2, 32)
 
-	root1, err := r.GetRoot()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	root2, err := r.GetRoot()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if hex.EncodeToString(root1) != hex.EncodeToString(root2) {
-		t.Fatalf("value %x did not match expected %x", root1, root2)
-	}
+	s.Equal(root1, root2)
 }
 
-func byteArray(length int, value byte) []byte {
-	arr := make([]byte, length)
+func (s *WakuRLNRelaySuite) TestInsertMember() {
+	rln, err := NewRLNWithDepth(32)
+	s.NoError(err)
 
-	for i := 0; i < length; i++ {
-		arr[i] = value
+	keypair, err := rln.MembershipKeyGen()
+	s.NoError(err)
+
+	inserted := rln.InsertMember(keypair.IDCommitment)
+	s.True(inserted)
+}
+
+func (s *WakuRLNRelaySuite) TestRemoveMember() {
+	rln, err := NewRLNWithDepth(32)
+	s.NoError(err)
+
+	deleted := rln.DeleteMember(MembershipIndex(0))
+	s.True(deleted)
+}
+
+func (s *WakuRLNRelaySuite) TestMerkleTreeConsistenceBetweenDeletionAndInsertion() {
+	rln, err := NewRLNWithDepth(32)
+	s.NoError(err)
+
+	root1, err := rln.GetMerkleRoot()
+	s.NoError(err)
+	s.Len(root1, 32)
+
+	keypair, err := rln.MembershipKeyGen()
+	s.NoError(err)
+
+	inserted := rln.InsertMember(keypair.IDCommitment)
+	s.True(inserted)
+
+	// read the Merkle Tree root after insertion
+	root2, err := rln.GetMerkleRoot()
+	s.NoError(err)
+	s.Len(root2, 32)
+
+	// delete the first member
+	deleted_member_index := MembershipIndex(0)
+	deleted := rln.DeleteMember(deleted_member_index)
+	s.True(deleted)
+
+	// read the Merkle Tree root after the deletion
+	root3, err := rln.GetMerkleRoot()
+	s.NoError(err)
+	s.Len(root3, 32)
+
+	// the root must change after the insertion
+	s.NotEqual(root1, root2)
+
+	// The initial root of the tree (empty tree) must be identical to
+	// the root of the tree after one insertion followed by a deletion
+	s.Equal(root1, root3)
+}
+
+func (s *WakuRLNRelaySuite) TestHash() {
+	rln, err := NewRLNWithDepth(32)
+	s.NoError(err)
+
+	// prepare the input
+	msg := []byte("Hello")
+
+	hash, err := rln.Hash(msg)
+	s.NoError(err)
+
+	expectedHash, _ := hex.DecodeString("efb8ac39dc22eaf377fe85b405b99ba78dbc2f3f32494add4501741df946bd1d")
+	s.Equal(expectedHash, hash[:])
+}
+
+func (s *WakuRLNRelaySuite) TestCreateListMembershipKeysAndCreateMerkleTreeFromList() {
+	groupSize := 100
+	list, root, err := CreateMembershipList(groupSize)
+	s.NoError(err)
+	s.Len(list, groupSize)
+	s.Len(root, HASH_HEX_SIZE) // check the size of the calculated tree root
+}
+
+func (s *WakuRLNRelaySuite) TestCheckCorrectness() {
+	groupKeys := STATIC_GROUP_KEYS
+
+	// create a set of MembershipKeyPair objects from groupKeys
+	groupKeyPairs, err := toMembershipKeyPairs(groupKeys)
+	s.NoError(err)
+
+	// extract the id commitments
+	var groupIDCommitments []IDCommitment
+	for _, c := range groupKeyPairs {
+		groupIDCommitments = append(groupIDCommitments, c.IDCommitment)
 	}
 
-	return arr
+	// calculate the Merkle tree root out of the extracted id commitments
+	root, err := CalcMerkleRoot(groupIDCommitments)
+	s.NoError(err)
+
+	expectedRoot, _ := hex.DecodeString(STATIC_GROUP_MERKLE_ROOT)
+
+	s.Len(groupKeyPairs, STATIC_GROUP_SIZE)
+	s.Equal(expectedRoot, root[:])
+}
+
+func (s *WakuRLNRelaySuite) TestValidProof() {
+	rln, err := NewRLN()
+	s.NoError(err)
+
+	memKeys, err := rln.MembershipKeyGen()
+	s.NoError(err)
+
+	//peer's index in the Merkle Tree
+	index := 5
+
+	// Create a Merkle tree with random members
+	for i := 0; i < 10; i++ {
+		memberIsAdded := false
+		if i == index {
+			// insert the current peer's pk
+			memberIsAdded = rln.InsertMember(memKeys.IDCommitment)
+		} else {
+			// create a new key pair
+			memberKeys, err := rln.MembershipKeyGen()
+			s.NoError(err)
+
+			memberIsAdded = rln.InsertMember(memberKeys.IDCommitment)
+		}
+		s.True(memberIsAdded)
+	}
+
+	// prepare the message
+	msg := []byte("Hello")
+
+	// prepare the epoch
+	var epoch Epoch
+
+	// generate proof
+	proofRes, err := rln.GenerateProof(msg, *memKeys, MembershipIndex(index), epoch)
+	s.NoError(err)
+
+	// verify the proof
+	verified := rln.Verify(msg, *proofRes)
+
+	s.True(verified)
+}
+
+func (s *WakuRLNRelaySuite) TestInvalidProof() {
+	rln, err := NewRLN()
+	s.NoError(err)
+
+	memKeys, err := rln.MembershipKeyGen()
+	s.NoError(err)
+
+	//peer's index in the Merkle Tree
+	index := 5
+
+	// Create a Merkle tree with random members
+	for i := 0; i < 10; i++ {
+		memberIsAdded := false
+		if i == index {
+			// insert the current peer's pk
+			memberIsAdded = rln.InsertMember(memKeys.IDCommitment)
+		} else {
+			// create a new key pair
+			memberKeys, err := rln.MembershipKeyGen()
+			s.NoError(err)
+
+			memberIsAdded = rln.InsertMember(memberKeys.IDCommitment)
+		}
+		s.True(memberIsAdded)
+	}
+
+	// prepare the message
+	msg := []byte("Hello")
+
+	// prepare the epoch
+	var epoch Epoch
+
+	badIndex := 4
+
+	// generate proof
+	proofRes, err := rln.GenerateProof(msg, *memKeys, MembershipIndex(badIndex), epoch)
+	s.NoError(err)
+
+	// verify the proof (should not be verified)
+	verified := rln.Verify(msg, *proofRes)
+
+	s.False(verified)
+}
+
+func (s *WakuRLNRelaySuite) TestEpochConsistency() {
+	// check edge cases
+	var epoch uint64 = math.MaxUint64
+	epochBytes := ToEpoch(epoch)
+	decodedEpoch := epochBytes.Uint64()
+
+	s.Equal(epoch, decodedEpoch)
+}
+
+func (s *WakuRLNRelaySuite) TestEpochComparison() {
+	// check edge cases
+	var time1 uint64 = math.MaxUint64
+	var time2 uint64 = math.MaxUint64 - 1
+
+	epoch1 := ToEpoch(time1)
+	epoch2 := ToEpoch(time2)
+
+	s.Equal(int64(1), Diff(epoch1, epoch2))
+	s.Equal(int64(-1), Diff(epoch2, epoch1))
 }

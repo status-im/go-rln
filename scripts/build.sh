@@ -1,3 +1,5 @@
+#!/bin/bash
+
 DIRECTORY=./libs
 if [[ -d "$DIRECTORY" ]]
 then

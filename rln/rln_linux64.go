@@ -1,3 +1,4 @@
+//go:build !android && linux && amd64 && !musl
 // +build !android,linux,amd64,!musl
 
 package rln
