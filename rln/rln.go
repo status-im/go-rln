@@ -8,7 +8,6 @@ import "C"
 import (
 	"encoding/binary"
 	"errors"
-	"io/ioutil"
 	"unsafe"
 )
 
@@ -18,28 +17,14 @@ type RLN struct {
 }
 
 // New returns a new RLN generated using the default merkle tree depth
-func NewRLN() (*RLN, error) {
-	return NewRLNWithDepth(MERKLE_TREE_DEPTH)
+func NewRLN(params []byte) (*RLN, error) {
+	return NewRLNWithDepth(MERKLE_TREE_DEPTH, params)
 }
 
 // NewRLNWithDepth generates an instance of RLN. An instance supports both zkSNARKs logics
 // and Merkle tree data structure and operations. The parameter `depth`` indicates the depth of Merkle tree
-func NewRLNWithDepth(depth int) (*RLN, error) {
+func NewRLNWithDepth(depth int, params []byte) (*RLN, error) {
 	r := &RLN{}
-
-	// parameters.key contains the prover and verifier keys
-	// to generate this file, clone this repo https://github.com/kilic/rln
-	// and run the following command in the root directory of the cloned project
-	// cargo run --example export_test_keys
-	// the file is generated separately and copied here
-	// parameters are function of tree depth and poseidon hasher
-	// to generate parameters for a different tree depth, change the tree size in the following line of rln library
-	// https://github.com/kilic/rln/blob/3bbec368a4adc68cd5f9bfae80b17e1bbb4ef373/examples/export_test_keys/main.rs#L4
-	// and then proceed as explained above
-	params, err := ioutil.ReadFile("./testdata/parameters.key")
-	if err != nil {
-		return nil, err
-	}
 
 	if len(params) == 0 {
 		return nil, errors.New("error in parameters.key")
@@ -258,8 +243,8 @@ func (r *RLN) AddAll(list []IDCommitment) bool {
 }
 
 // CalcMerkleRoot returns the root of the Merkle tree that is computed from the supplied list
-func CalcMerkleRoot(list []IDCommitment) (MerkleNode, error) {
-	rln, err := NewRLN()
+func CalcMerkleRoot(list []IDCommitment, params []byte) (MerkleNode, error) {
+	rln, err := NewRLN(params)
 	if err != nil {
 		return MerkleNode{}, err
 	}
@@ -277,9 +262,9 @@ func CalcMerkleRoot(list []IDCommitment) (MerkleNode, error) {
 // CreateMembershipList produces a list of membership key pairs and also returns the root of a Merkle tree constructed
 // out of the identity commitment keys of the generated list. The output of this function is used to initialize a static
 // group keys (to test waku-rln-relay in the off-chain mode)
-func CreateMembershipList(n int) ([]MembershipKeyPair, MerkleNode, error) {
+func CreateMembershipList(n int, params []byte) ([]MembershipKeyPair, MerkleNode, error) {
 	// initialize a Merkle tree
-	rln, err := NewRLN()
+	rln, err := NewRLN(params)
 	if err != nil {
 		return nil, MerkleNode{}, err
 	}

@@ -3,6 +3,7 @@ package rln
 import (
 	"bytes"
 	"encoding/hex"
+	"io/ioutil"
 	"math"
 	"testing"
 
@@ -15,10 +16,30 @@ func TestWakuRLNRelaySuite(t *testing.T) {
 
 type WakuRLNRelaySuite struct {
 	suite.Suite
+
+	parameters []byte
+}
+
+func (s *WakuRLNRelaySuite) SetupTest() {
+	// parameters.key contains the prover and verifier keys
+	// to generate this file, clone this repo https://github.com/kilic/rln
+	// and run the following command in the root directory of the cloned project
+	// cargo run --example export_test_keys
+	// the file is generated separately and copied here
+	// parameters are function of tree depth and poseidon hasher
+	// to generate parameters for a different tree depth, change the tree size in the following line of rln library
+	// https://github.com/kilic/rln/blob/3bbec368a4adc68cd5f9bfae80b17e1bbb4ef373/examples/export_test_keys/main.rs#L4
+	// and then proceed as explained above
+	params, err := ioutil.ReadFile("./testdata/parameters.key")
+	if err != nil {
+		s.Fail("could not read parameters")
+	}
+
+	s.parameters = params
 }
 
 func (s *WakuRLNRelaySuite) TestMembershipKeyGen() {
-	rln, err := NewRLNWithDepth(32)
+	rln, err := NewRLNWithDepth(32, s.parameters)
 	s.NoError(err)
 
 	key, err := rln.MembershipKeyGen()
@@ -32,7 +53,7 @@ func (s *WakuRLNRelaySuite) TestMembershipKeyGen() {
 }
 
 func (s *WakuRLNRelaySuite) TestGetMerkleRoot() {
-	rln, err := NewRLNWithDepth(32)
+	rln, err := NewRLNWithDepth(32, s.parameters)
 	s.NoError(err)
 
 	root1, err := rln.GetMerkleRoot()
@@ -47,7 +68,7 @@ func (s *WakuRLNRelaySuite) TestGetMerkleRoot() {
 }
 
 func (s *WakuRLNRelaySuite) TestInsertMember() {
-	rln, err := NewRLNWithDepth(32)
+	rln, err := NewRLNWithDepth(32, s.parameters)
 	s.NoError(err)
 
 	keypair, err := rln.MembershipKeyGen()
@@ -58,7 +79,7 @@ func (s *WakuRLNRelaySuite) TestInsertMember() {
 }
 
 func (s *WakuRLNRelaySuite) TestRemoveMember() {
-	rln, err := NewRLNWithDepth(32)
+	rln, err := NewRLNWithDepth(32, s.parameters)
 	s.NoError(err)
 
 	deleted := rln.DeleteMember(MembershipIndex(0))
@@ -66,7 +87,7 @@ func (s *WakuRLNRelaySuite) TestRemoveMember() {
 }
 
 func (s *WakuRLNRelaySuite) TestMerkleTreeConsistenceBetweenDeletionAndInsertion() {
-	rln, err := NewRLNWithDepth(32)
+	rln, err := NewRLNWithDepth(32, s.parameters)
 	s.NoError(err)
 
 	root1, err := rln.GetMerkleRoot()
@@ -103,7 +124,7 @@ func (s *WakuRLNRelaySuite) TestMerkleTreeConsistenceBetweenDeletionAndInsertion
 }
 
 func (s *WakuRLNRelaySuite) TestHash() {
-	rln, err := NewRLNWithDepth(32)
+	rln, err := NewRLNWithDepth(32, s.parameters)
 	s.NoError(err)
 
 	// prepare the input
@@ -118,7 +139,7 @@ func (s *WakuRLNRelaySuite) TestHash() {
 
 func (s *WakuRLNRelaySuite) TestCreateListMembershipKeysAndCreateMerkleTreeFromList() {
 	groupSize := 100
-	list, root, err := CreateMembershipList(groupSize)
+	list, root, err := CreateMembershipList(groupSize, s.parameters)
 	s.NoError(err)
 	s.Len(list, groupSize)
 	s.Len(root, HASH_HEX_SIZE) // check the size of the calculated tree root
@@ -138,7 +159,7 @@ func (s *WakuRLNRelaySuite) TestCheckCorrectness() {
 	}
 
 	// calculate the Merkle tree root out of the extracted id commitments
-	root, err := CalcMerkleRoot(groupIDCommitments)
+	root, err := CalcMerkleRoot(groupIDCommitments, s.parameters)
 	s.NoError(err)
 
 	expectedRoot, _ := hex.DecodeString(STATIC_GROUP_MERKLE_ROOT)
@@ -148,7 +169,7 @@ func (s *WakuRLNRelaySuite) TestCheckCorrectness() {
 }
 
 func (s *WakuRLNRelaySuite) TestValidProof() {
-	rln, err := NewRLN()
+	rln, err := NewRLN(s.parameters)
 	s.NoError(err)
 
 	memKeys, err := rln.MembershipKeyGen()
@@ -190,7 +211,7 @@ func (s *WakuRLNRelaySuite) TestValidProof() {
 }
 
 func (s *WakuRLNRelaySuite) TestInvalidProof() {
-	rln, err := NewRLN()
+	rln, err := NewRLN(s.parameters)
 	s.NoError(err)
 
 	memKeys, err := rln.MembershipKeyGen()
