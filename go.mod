@@ -3,7 +3,8 @@ module github.com/decanus/go-rln
 go 1.16
 
 require (
-	github.com/ethereum/go-ethereum v1.10.20
-	github.com/golang/protobuf v1.5.2
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/stretchr/testify v1.7.2
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
