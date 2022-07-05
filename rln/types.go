@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"time"
-
-	"github.com/decanus/go-rln/rln/pb"
 )
 
 // IDKey is an identity key as defined in https://hackmd.io/tMTLMYmTR5eynw2lwK9n1w?view#Membership
@@ -50,23 +48,6 @@ type RateLimitProof struct {
 	// nullifier enables linking two messages published during the same epoch
 	// see details in https://hackmd.io/tMTLMYmTR5eynw2lwK9n1w?view#Nullifiers
 	Nullifier Nullifier
-}
-
-func ToRateLimitProof(msg *pb.WakuMessage) *RateLimitProof {
-	if msg == nil {
-		return nil
-	}
-
-	result := &RateLimitProof{
-		Proof:      ZKSNARK(Bytes256(msg.RateLimitProof.Proof)),
-		MerkleRoot: MerkleNode(Bytes32(msg.RateLimitProof.MerkleRoot)),
-		Epoch:      Epoch(Bytes32(msg.RateLimitProof.Epoch)),
-		ShareX:     MerkleNode(Bytes32(msg.RateLimitProof.ShareX)),
-		ShareY:     MerkleNode(Bytes32(msg.RateLimitProof.ShareY)),
-		Nullifier:  Nullifier(Bytes32(msg.RateLimitProof.Nullifier)),
-	}
-
-	return result
 }
 
 type MembershipIndex uint

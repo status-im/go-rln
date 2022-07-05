@@ -10,8 +10,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"unsafe"
-
-	"github.com/decanus/go-rln/rln/pb"
 )
 
 // RLN represents the context used for rln.
@@ -257,15 +255,6 @@ func (r *RLN) AddAll(list []IDCommitment) bool {
 		}
 	}
 	return true
-}
-
-func ToRLNSignal(wakuMessage *pb.WakuMessage) []byte {
-	if wakuMessage == nil {
-		return []byte{}
-	}
-
-	contentTopicBytes := []byte(wakuMessage.ContentTopic)
-	return append(wakuMessage.Payload, contentTopicBytes...)
 }
 
 // CalcMerkleRoot returns the root of the Merkle tree that is computed from the supplied list
