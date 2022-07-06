@@ -10,17 +10,17 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-func TestWakuRLNRelaySuite(t *testing.T) {
-	suite.Run(t, new(WakuRLNRelaySuite))
+func TestRLNSuite(t *testing.T) {
+	suite.Run(t, new(RLNSuite))
 }
 
-type WakuRLNRelaySuite struct {
+type RLNSuite struct {
 	suite.Suite
 
 	parameters []byte
 }
 
-func (s *WakuRLNRelaySuite) SetupTest() {
+func (s *RLNSuite) SetupTest() {
 	// parameters.key contains the prover and verifier keys
 	// to generate this file, clone this repo https://github.com/kilic/rln
 	// and run the following command in the root directory of the cloned project
@@ -38,7 +38,7 @@ func (s *WakuRLNRelaySuite) SetupTest() {
 	s.parameters = params
 }
 
-func (s *WakuRLNRelaySuite) TestMembershipKeyGen() {
+func (s *RLNSuite) TestMembershipKeyGen() {
 	rln, err := NewRLNWithDepth(32, s.parameters)
 	s.NoError(err)
 
@@ -52,7 +52,7 @@ func (s *WakuRLNRelaySuite) TestMembershipKeyGen() {
 	s.False(bytes.Equal(key.IDKey[:], make([]byte, 32)))
 }
 
-func (s *WakuRLNRelaySuite) TestGetMerkleRoot() {
+func (s *RLNSuite) TestGetMerkleRoot() {
 	rln, err := NewRLNWithDepth(32, s.parameters)
 	s.NoError(err)
 
@@ -67,7 +67,7 @@ func (s *WakuRLNRelaySuite) TestGetMerkleRoot() {
 	s.Equal(root1, root2)
 }
 
-func (s *WakuRLNRelaySuite) TestInsertMember() {
+func (s *RLNSuite) TestInsertMember() {
 	rln, err := NewRLNWithDepth(32, s.parameters)
 	s.NoError(err)
 
@@ -78,7 +78,7 @@ func (s *WakuRLNRelaySuite) TestInsertMember() {
 	s.True(inserted)
 }
 
-func (s *WakuRLNRelaySuite) TestRemoveMember() {
+func (s *RLNSuite) TestRemoveMember() {
 	rln, err := NewRLNWithDepth(32, s.parameters)
 	s.NoError(err)
 
@@ -86,7 +86,7 @@ func (s *WakuRLNRelaySuite) TestRemoveMember() {
 	s.True(deleted)
 }
 
-func (s *WakuRLNRelaySuite) TestMerkleTreeConsistenceBetweenDeletionAndInsertion() {
+func (s *RLNSuite) TestMerkleTreeConsistenceBetweenDeletionAndInsertion() {
 	rln, err := NewRLNWithDepth(32, s.parameters)
 	s.NoError(err)
 
@@ -123,7 +123,7 @@ func (s *WakuRLNRelaySuite) TestMerkleTreeConsistenceBetweenDeletionAndInsertion
 	s.Equal(root1, root3)
 }
 
-func (s *WakuRLNRelaySuite) TestHash() {
+func (s *RLNSuite) TestHash() {
 	rln, err := NewRLNWithDepth(32, s.parameters)
 	s.NoError(err)
 
@@ -137,7 +137,7 @@ func (s *WakuRLNRelaySuite) TestHash() {
 	s.Equal(expectedHash, hash[:])
 }
 
-func (s *WakuRLNRelaySuite) TestCreateListMembershipKeysAndCreateMerkleTreeFromList() {
+func (s *RLNSuite) TestCreateListMembershipKeysAndCreateMerkleTreeFromList() {
 	groupSize := 100
 	list, root, err := CreateMembershipList(groupSize, s.parameters)
 	s.NoError(err)
@@ -145,7 +145,7 @@ func (s *WakuRLNRelaySuite) TestCreateListMembershipKeysAndCreateMerkleTreeFromL
 	s.Len(root, HASH_HEX_SIZE) // check the size of the calculated tree root
 }
 
-func (s *WakuRLNRelaySuite) TestCheckCorrectness() {
+func (s *RLNSuite) TestCheckCorrectness() {
 	groupKeys := STATIC_GROUP_KEYS
 
 	// create a set of MembershipKeyPair objects from groupKeys
@@ -168,7 +168,7 @@ func (s *WakuRLNRelaySuite) TestCheckCorrectness() {
 	s.Equal(expectedRoot, root[:])
 }
 
-func (s *WakuRLNRelaySuite) TestValidProof() {
+func (s *RLNSuite) TestValidProof() {
 	rln, err := NewRLN(s.parameters)
 	s.NoError(err)
 
@@ -210,7 +210,7 @@ func (s *WakuRLNRelaySuite) TestValidProof() {
 	s.True(verified)
 }
 
-func (s *WakuRLNRelaySuite) TestInvalidProof() {
+func (s *RLNSuite) TestInvalidProof() {
 	rln, err := NewRLN(s.parameters)
 	s.NoError(err)
 
@@ -254,7 +254,7 @@ func (s *WakuRLNRelaySuite) TestInvalidProof() {
 	s.False(verified)
 }
 
-func (s *WakuRLNRelaySuite) TestEpochConsistency() {
+func (s *RLNSuite) TestEpochConsistency() {
 	// check edge cases
 	var epoch uint64 = math.MaxUint64
 	epochBytes := ToEpoch(epoch)
@@ -263,7 +263,7 @@ func (s *WakuRLNRelaySuite) TestEpochConsistency() {
 	s.Equal(epoch, decodedEpoch)
 }
 
-func (s *WakuRLNRelaySuite) TestEpochComparison() {
+func (s *RLNSuite) TestEpochComparison() {
 	// check edge cases
 	var time1 uint64 = math.MaxUint64
 	var time2 uint64 = math.MaxUint64 - 1
