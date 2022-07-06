@@ -242,9 +242,8 @@ func (e Epoch) Uint64() uint64 {
 
 // CalcEpoch gets time `t` as `float64` with subseconds resolution in the fractional part
 //  and returns its corresponding rln `Epoch` value
-func CalcEpoch(t time.Duration) Epoch {
-	e := uint64(t / EPOCH_UNIT_SECONDS)
-	return ToEpoch(e)
+func CalcEpoch(t time.Time) Epoch {
+	return ToEpoch(uint64(t.Unix()))
 }
 
 // GetCurrentEpoch gets the current rln Epoch time
@@ -257,4 +256,8 @@ func Diff(e1, e2 Epoch) int64 {
 	epoch1 := e1.Uint64()
 	epoch2 := e2.Uint64()
 	return int64(epoch1) - int64(epoch2)
+}
+
+func (e Epoch) Time() time.Time {
+	return time.Unix(int64(e.Uint64()), 0)
 }
