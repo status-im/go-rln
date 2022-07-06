@@ -62,28 +62,8 @@ func (p ProofMetadata) Equals(p2 ProofMetadata) bool {
 	return bytes.Equal(p.Nullifier[:], p2.Nullifier[:]) && bytes.Equal(p.ShareX[:], p2.ShareX[:]) && bytes.Equal(p.ShareY[:], p2.ShareY[:])
 }
 
-type MessageValidationResult int
-
-const (
-	MessageValidationResult_Unknown MessageValidationResult = iota
-	MessageValidationResult_Valid
-	MessageValidationResult_Invalid
-	MessageValidationResult_Spam
-)
-
-/*
-# inputs of the membership contract constructor
-# TODO may be able to make these constants private and put them inside the waku_rln_relay_utils
-const
-  MEMBERSHIP_FEE* = 5.u256
-*/
-
 //  the current implementation of the rln lib only supports a circuit for Merkle tree with depth 32
 const MERKLE_TREE_DEPTH int = 20
-
-// TODO the ETH_CLIENT should be an input to the rln-relay, though hardcoded for now
-// the current address is the address of ganache-cli when run locally
-const ETH_CLIENT = "ws://localhost:8540/"
 
 // HASH_BIT_SIZE is the size of poseidon hash output in bits
 const HASH_BIT_SIZE = 256
@@ -210,17 +190,6 @@ func init() {
 // only identity commitments are used for the Merkle tree construction
 // the root is created locally, using createMembershipList proc from waku_rln_relay_utils module, and the result is hardcoded in here
 const STATIC_GROUP_MERKLE_ROOT = "a1877a553eff12e1b21632a0545a916a5c5b8060ad7cc6c69956741134397b2d"
-
-// the rln-relay epoch length in seconds
-// TODO: change data type
-const EPOCH_UNIT_SECONDS = time.Second * 10
-
-// the maximum clock difference between peers in seconds
-// TODO: change data type
-const MAX_CLOCK_GAP_SECONDS = 20 * time.Second
-
-// maximum allowed gap between the epochs of messages' RateLimitProofs
-const MAX_EPOCH_GAP = int64(MAX_CLOCK_GAP_SECONDS / EPOCH_UNIT_SECONDS)
 
 type Epoch [32]byte
 
