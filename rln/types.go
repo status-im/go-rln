@@ -191,6 +191,8 @@ func init() {
 // the root is created locally, using createMembershipList proc from waku_rln_relay_utils module, and the result is hardcoded in here
 const STATIC_GROUP_MERKLE_ROOT = "a1877a553eff12e1b21632a0545a916a5c5b8060ad7cc6c69956741134397b2d"
 
+const EPOCH_UNIT_SECONDS = uint64(10) // the rln-relay epoch length in seconds
+
 type Epoch [32]byte
 
 func BytesToEpoch(b []byte) Epoch {
@@ -209,15 +211,14 @@ func (e Epoch) Uint64() uint64 {
 	return binary.LittleEndian.Uint64(e[:])
 }
 
-// CalcEpoch gets time `t` as `float64` with subseconds resolution in the fractional part
-//  and returns its corresponding rln `Epoch` value
+// CalcEpoch returns the corresponding rln `Epoch` value for a time.Time
 func CalcEpoch(t time.Time) Epoch {
-	return ToEpoch(uint64(t.Unix()))
+	return ToEpoch(uint64(t.Unix()) / EPOCH_UNIT_SECONDS)
 }
 
 // GetCurrentEpoch gets the current rln Epoch time
 func GetCurrentEpoch() Epoch {
-	return ToEpoch(uint64(time.Now().Unix()))
+	return CalcEpoch(time.Now())
 }
 
 // Diff returns the difference between the two rln `Epoch`s `e1` and `e2`
@@ -228,5 +229,5 @@ func Diff(e1, e2 Epoch) int64 {
 }
 
 func (e Epoch) Time() time.Time {
-	return time.Unix(int64(e.Uint64()), 0)
+	return time.Unix(int64(e.Uint64()*EPOCH_UNIT_SECONDS), 0)
 }
