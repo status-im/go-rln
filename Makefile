@@ -1,4 +1,4 @@
-.PHONY: rlnlib-cross
+.PHONY: rlnlib
 
 SHELL := bash # the shell used internally by Make
 
