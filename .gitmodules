@@ -1,6 +1,6 @@
 [submodule "rln"]
 	path = lib/rln
-	url = https://github.com/kilic/rln
+	url = https://github.com/status-im/rln
 [submodule "lib/rln"]
 	path = lib/rln
-	url = git@github.com:kilic/rln.git
+	url = git@github.com:status-im/rln.git

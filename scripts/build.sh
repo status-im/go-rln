@@ -57,5 +57,5 @@ for platform in `ls ${COMPILE_DIR} | grep -v release | grep -v debug`
 do
   PLATFORM_DIR=${DIRECTORY}/$platform
   mkdir -p ${PLATFORM_DIR}
-  cp ${COMPILE_DIR}/$platform/release/librln.* ${PLATFORM_DIR}
+  cp ${COMPILE_DIR}/$platform/release/librln.{a,lib} ${PLATFORM_DIR}
 done
