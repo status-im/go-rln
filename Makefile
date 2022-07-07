@@ -1,4 +1,4 @@
-.PHONY: rlnlib
+.PHONY: rlnlib-cross
 
 SHELL := bash # the shell used internally by Make
 
@@ -13,4 +13,4 @@ rlnlib:
 	cd lib/rln && cbindgen --config ../cbindgen.toml --crate rln --output ../../rln/librln.h --lang c
 
 test:
-	LD_LIBRARY_PATH="${PWD}/libs/x86_64-unknown-linux-gnu/" go test ./... -count 1 -v
+	go test ./... -count 1 -v
