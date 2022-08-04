@@ -74,16 +74,16 @@ func (s *RLNSuite) TestInsertMember() {
 	keypair, err := rln.MembershipKeyGen()
 	s.NoError(err)
 
-	inserted := rln.InsertMember(keypair.IDCommitment)
-	s.True(inserted)
+	err = rln.InsertMember(keypair.IDCommitment)
+	s.NoError(err)
 }
 
 func (s *RLNSuite) TestRemoveMember() {
 	rln, err := NewRLNWithDepth(32, s.parameters)
 	s.NoError(err)
 
-	deleted := rln.DeleteMember(MembershipIndex(0))
-	s.True(deleted)
+	err = rln.DeleteMember(MembershipIndex(0))
+	s.NoError(err)
 }
 
 func (s *RLNSuite) TestMerkleTreeConsistenceBetweenDeletionAndInsertion() {
@@ -97,8 +97,8 @@ func (s *RLNSuite) TestMerkleTreeConsistenceBetweenDeletionAndInsertion() {
 	keypair, err := rln.MembershipKeyGen()
 	s.NoError(err)
 
-	inserted := rln.InsertMember(keypair.IDCommitment)
-	s.True(inserted)
+	err = rln.InsertMember(keypair.IDCommitment)
+	s.NoError(err)
 
 	// read the Merkle Tree root after insertion
 	root2, err := rln.GetMerkleRoot()
@@ -107,8 +107,8 @@ func (s *RLNSuite) TestMerkleTreeConsistenceBetweenDeletionAndInsertion() {
 
 	// delete the first member
 	deleted_member_index := MembershipIndex(0)
-	deleted := rln.DeleteMember(deleted_member_index)
-	s.True(deleted)
+	err = rln.DeleteMember(deleted_member_index)
+	s.NoError(err)
 
 	// read the Merkle Tree root after the deletion
 	root3, err := rln.GetMerkleRoot()
@@ -180,18 +180,18 @@ func (s *RLNSuite) TestValidProof() {
 
 	// Create a Merkle tree with random members
 	for i := 0; i < 10; i++ {
-		memberIsAdded := false
+		var err error
 		if i == index {
 			// insert the current peer's pk
-			memberIsAdded = rln.InsertMember(memKeys.IDCommitment)
+			err = rln.InsertMember(memKeys.IDCommitment)
 		} else {
 			// create a new key pair
 			memberKeys, err := rln.MembershipKeyGen()
 			s.NoError(err)
 
-			memberIsAdded = rln.InsertMember(memberKeys.IDCommitment)
+			err = rln.InsertMember(memberKeys.IDCommitment)
 		}
-		s.True(memberIsAdded)
+		s.NoError(err)
 	}
 
 	// prepare the message
@@ -222,18 +222,18 @@ func (s *RLNSuite) TestInvalidProof() {
 
 	// Create a Merkle tree with random members
 	for i := 0; i < 10; i++ {
-		memberIsAdded := false
+		var err error
 		if i == index {
 			// insert the current peer's pk
-			memberIsAdded = rln.InsertMember(memKeys.IDCommitment)
+			err = rln.InsertMember(memKeys.IDCommitment)
 		} else {
 			// create a new key pair
 			memberKeys, err := rln.MembershipKeyGen()
 			s.NoError(err)
 
-			memberIsAdded = rln.InsertMember(memberKeys.IDCommitment)
+			err = rln.InsertMember(memberKeys.IDCommitment)
 		}
-		s.True(memberIsAdded)
+		s.NoError(err)
 	}
 
 	// prepare the message

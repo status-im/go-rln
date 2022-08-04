@@ -3,21 +3,42 @@ package rln
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/hex"
 	"time"
 )
 
 // IDKey is an identity key as defined in https://hackmd.io/tMTLMYmTR5eynw2lwK9n1w?view#Membership
 type IDKey [32]byte
 
+func (i IDKey) String() string {
+	return hex.EncodeToString(i[:])
+}
+
 // IDCommintment is hash of identity key as defined in https://hackmd.io/tMTLMYmTR5eynw2lwK9n1w?view#Membership
 type IDCommitment [32]byte
+
+func (i IDCommitment) String() string {
+	return hex.EncodeToString(i[:])
+}
 
 // Each node of the Merkle tee is a Poseidon hash which is a 32 byte value
 type MerkleNode [32]byte
 
+func (m MerkleNode) String() string {
+	return hex.EncodeToString(m[:])
+}
+
 type Nullifier [32]byte
 
+func (n Nullifier) String() string {
+	return hex.EncodeToString(n[:])
+}
+
 type ZKSNARK [256]byte
+
+func (z ZKSNARK) String() string {
+	return hex.EncodeToString(z[:])
+}
 
 // Custom data types defined for waku rln relay -------------------------
 

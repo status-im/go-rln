@@ -192,7 +192,7 @@ func (r *RLN) Verify(data []byte, proof RateLimitProof) bool {
 }
 
 // InsertMember adds the member to the tree
-func (r *RLN) InsertMember(idComm IDCommitment) bool {
+func (r *RLN) InsertMember(idComm IDCommitment) error {
 	buf := toBuffer(idComm[:])
 
 	size := int(unsafe.Sizeof(buf))
@@ -200,15 +200,22 @@ func (r *RLN) InsertMember(idComm IDCommitment) bool {
 	*in = buf
 
 	res := C.update_next_member(r.ptr, in)
-	return bool(res)
+
+	if !bool(res) {
+		return errors.New("couldn't insert member")
+	}
+	return nil
 }
 
 // DeleteMember removes an IDCommitment key from the tree. The index
 // parameter is the position of the id commitment key to be deleted from the tree.
 // The deleted id commitment key is replaced with a zero leaf
-func (r *RLN) DeleteMember(index MembershipIndex) bool {
+func (r *RLN) DeleteMember(index MembershipIndex) error {
 	deletionSuccess := bool(C.delete_member(r.ptr, C.ulong(index)))
-	return deletionSuccess
+	if !bool(deletionSuccess) {
+		return errors.New("couldn't delete member")
+	}
+	return nil
 }
 
 // GetMerkleRoot reads the Merkle Tree root after insertion
@@ -233,13 +240,13 @@ func (r *RLN) GetMerkleRoot() (MerkleNode, error) {
 }
 
 // AddAll adds members to the Merkle tree
-func (r *RLN) AddAll(list []IDCommitment) bool {
+func (r *RLN) AddAll(list []IDCommitment) error {
 	for _, member := range list {
-		if !r.InsertMember(member) {
-			return false
+		if err := r.InsertMember(member); err != nil {
+			return err
 		}
 	}
-	return true
+	return nil
 }
 
 // CalcMerkleRoot returns the root of the Merkle tree that is computed from the supplied list
@@ -251,8 +258,8 @@ func CalcMerkleRoot(list []IDCommitment, params []byte) (MerkleNode, error) {
 
 	// create a Merkle tree
 	for _, c := range list {
-		if !rln.InsertMember(c) {
-			return MerkleNode{}, errors.New("could not add member")
+		if err := rln.InsertMember(c); err != nil {
+			return MerkleNode{}, err
 		}
 	}
 
@@ -280,8 +287,8 @@ func CreateMembershipList(n int, params []byte) ([]MembershipKeyPair, MerkleNode
 		output = append(output, *keypair)
 
 		// insert the key to the Merkle tree
-		if !rln.InsertMember(keypair.IDCommitment) {
-			return nil, MerkleNode{}, errors.New("could not insert member")
+		if err := rln.InsertMember(keypair.IDCommitment); err != nil {
+			return nil, MerkleNode{}, err
 		}
 	}
 
