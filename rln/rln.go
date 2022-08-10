@@ -36,7 +36,7 @@ func NewRLNWithDepth(depth int, params []byte) (*RLN, error) {
 	in := (*C.Buffer)(C.malloc(C.size_t(size)))
 	*in = buf
 
-	if !bool(C.new_circuit_from_params(C.ulong(depth), in, &r.ptr)) {
+	if !bool(C.new_circuit_from_params(C.uintptr_t(depth), in, &r.ptr)) {
 		return nil, errors.New("failed to initialize")
 	}
 
@@ -80,7 +80,7 @@ func toBuffer(data []byte) C.Buffer {
 	dataPtr, dataLen := sliceToPtr(data)
 	return C.Buffer{
 		ptr: dataPtr,
-		len: C.ulong(dataLen),
+		len: C.uintptr_t(dataLen),
 	}
 }
 
@@ -207,7 +207,7 @@ func (r *RLN) InsertMember(idComm IDCommitment) bool {
 // parameter is the position of the id commitment key to be deleted from the tree.
 // The deleted id commitment key is replaced with a zero leaf
 func (r *RLN) DeleteMember(index MembershipIndex) bool {
-	deletionSuccess := bool(C.delete_member(r.ptr, C.ulong(index)))
+	deletionSuccess := bool(C.delete_member(r.ptr, C.uintptr_t(index)))
 	return deletionSuccess
 }
 

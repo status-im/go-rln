@@ -6,8 +6,7 @@ package rln
 #cgo android,arm7 LDFLAGS:-L${SRCDIR}/../libs/armv7-linux-androideabi
 #cgo android,amd64 LDFLAGS:-L${SRCDIR}/../libs/x86_64-linux-android
 #cgo android,386 LDFLAGS:-L${SRCDIR}/../libs/i686-linux-android
-#cgo linux,arm,!arm7 LDFLAGS:-L${SRCDIR}/../libs/arm-unknown-linux-gnueabi
-#cgo linux,arm7 LDFLAGS:-L${SRCDIR}/../libs/arm-unknown-linux-gnueabihf
+#cgo linux,arm LDFLAGS:-L${SRCDIR}/../libs/armv7-linux-androideabi
 #cgo linux,arm64 LDFLAGS:-L${SRCDIR}/../libs/aarch64-unknown-linux-gnu
 #cgo linux,amd64,musl,!android LDFLAGS:-L${SRCDIR}/../libs/x86_64-unknown-linux-musl
 #cgo linux,amd64,!musl,!android LDFLAGS:-L${SRCDIR}/../libs/x86_64-unknown-linux-gnu
