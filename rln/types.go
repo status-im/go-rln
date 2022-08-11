@@ -7,21 +7,21 @@ import (
 )
 
 // IDKey is an identity key as defined in https://hackmd.io/tMTLMYmTR5eynw2lwK9n1w?view#Membership
-type IDKey [32]byte
+type IDKey = [32]byte
 
 // IDCommintment is hash of identity key as defined in https://hackmd.io/tMTLMYmTR5eynw2lwK9n1w?view#Membership
-type IDCommitment [32]byte
+type IDCommitment = [32]byte
 
 // Each node of the Merkle tee is a Poseidon hash which is a 32 byte value
-type MerkleNode [32]byte
+type MerkleNode = [32]byte
 
-type Nullifier [32]byte
+type Nullifier = [32]byte
 
-type ZKSNARK [256]byte
+type ZKSNARK = [256]byte
 
 // Custom data types defined for waku rln relay -------------------------
 
-type MembershipKeyPair struct {
+type MembershipKeyPair = struct {
 	// user's identity key (a secret key) which is selected randomly
 	// see details in https://hackmd.io/tMTLMYmTR5eynw2lwK9n1w?view#Membership
 	IDKey IDKey
@@ -50,7 +50,7 @@ type RateLimitProof struct {
 	Nullifier Nullifier
 }
 
-type MembershipIndex uint
+type MembershipIndex = uint
 
 type ProofMetadata struct {
 	Nullifier Nullifier
