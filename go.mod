@@ -1,4 +1,4 @@
-module github.com/status-im/go-rln
+module github.com/waku-org/go-rln
 
 go 1.17
 
